@@ -1,33 +1,11 @@
-/* SPDX-License-Identifier: AGPL-3.0-or-later */
-
-/* Copyright © 2019-2024 Matheus Afonso Martins Moreira
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License
- * as published by the Free Software Foundation, either version 3
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Affero General Public License for more details.
- *
- * You should have received a copy
- * of the GNU Affero General Public License
- * along with this program. If not, see
- * <https://www.gnu.org/licenses/>.
- *
- */
-
-#define _POSIX_C_SOURCE 200809L
 #include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
 
 #include <hidapi/hidapi.h>
 
-#define VID 0x048d /* Integrated Technology Express, Inc. */
-#define PID 0x8910 /* ITE Device(829x) */
+#include <whisperer/devices/ite/829x.h>
+
+#define VID WHISPERER_DEVICES_ITE_VID
+#define PID WHISPERER_DEVICES_ITE_829X_PID
 
 struct ite_829x {
 	hid_device *keyboard;
@@ -50,7 +28,9 @@ struct ite_829x {
  * Speed controls how fast the keyboard's effects animate.
  * Seems to be a scale from 0 to 2.
  */
-static unsigned int set_brightness_and_speed_common(struct ite_829x *ite_829x)
+static
+unsigned int
+set_brightness_and_speed_common(struct ite_829x *ite_829x)
 {
 	if (!ite_829x || !ite_829x->keyboard)
 		return 3;
@@ -74,7 +54,9 @@ static unsigned int set_brightness_and_speed_common(struct ite_829x *ite_829x)
 	return 0;
 }
 
-unsigned int set_brightness_and_speed(const size_t count, const char **arguments, void *context)
+static
+unsigned int
+set_brightness_and_speed(const size_t count, const char **arguments, void *context)
 {
 	struct ite_829x *ite_829x = context;
 	if (!ite_829x || !ite_829x->keyboard)
@@ -103,7 +85,9 @@ unsigned int set_brightness_and_speed(const size_t count, const char **arguments
  * Values above 0x0A seem to have the same effect as 0x0A.
  * Seems to be a scale from 1 to 10 with 0 being off.
  */
-unsigned int set_brightness(const size_t count, const char **arguments, void *context)
+static
+unsigned int
+set_brightness(const size_t count, const char **arguments, void *context)
 {
 	struct ite_829x *ite_829x = context;
 	if (!ite_829x || !ite_829x->keyboard)
@@ -125,7 +109,9 @@ unsigned int set_brightness(const size_t count, const char **arguments, void *co
  * 	2	cc090a0100007f
  * 	3	cc090a0200007f
  */
-unsigned int set_speed(const size_t count, const char **arguments, void *context)
+static
+unsigned int
+set_speed(const size_t count, const char **arguments, void *context)
 {
 	struct ite_829x *ite_829x = context;
 	if (!ite_829x || !ite_829x->keyboard)
@@ -155,7 +141,9 @@ unsigned int set_speed(const size_t count, const char **arguments, void *context
  * My keyboard apparently doesn't support the ripple effect,
  * even though it is present in the Clevo Control Center interface.
  */
-unsigned int set_effects(const size_t count, const char **arguments, void *context)
+static
+unsigned int
+set_effects(const size_t count, const char **arguments, void *context)
 {
 	struct ite_829x *ite_829x = context;
 	if (!ite_829x || !ite_829x->keyboard)
@@ -228,7 +216,9 @@ unsigned int set_effects(const size_t count, const char **arguments, void *conte
  * 	cc000c0000007f
  *
  */
-unsigned int reset(const size_t count, const char **arguments, void *context)
+static
+unsigned int
+reset(const size_t count, const char **arguments, void *context)
 {
 	struct ite_829x *ite_829x = context;
 	if (!ite_829x || !ite_829x->keyboard)
@@ -280,7 +270,9 @@ unsigned int reset(const size_t count, const char **arguments, void *context)
  * All of them can be controlled individually.
  * After resetting the keyboard, all keys must be reconfigured.
  */
-unsigned int set_led_color(const size_t count, const char **arguments, void *context)
+static
+unsigned int
+set_led_color(const size_t count, const char **arguments, void *context)
 {
 	struct ite_829x *ite_829x = context;
 	if (!ite_829x || !ite_829x->keyboard)
@@ -307,85 +299,37 @@ unsigned int set_led_color(const size_t count, const char **arguments, void *con
 	return 0;
 }
 
-#include "cmd.c"
-
-static int to_exit_code(int status, hid_device *keyboard)
+int
+whisperer_devices_ite_829x_probe(struct whisperer_commands *commands)
 {
-	switch (status) {
-	case -2:
-		fputs("Memory allocation error\n", stderr);
-		return 4;
-	case -1:
-		fputs("Unknown command\n", stderr);
-		return 3;
-	case 0:
-		return 0; // Success.
-	case 1:
-		fprintf(stderr,
-		        "Could not send feature report: %ls\n",
-		        hid_error(keyboard));
-		return 1;
-	case 2:
-		fputs("Incorrect number of parameters\n", stderr);
-		return 3;
-	case 3:
-		fputs("NULL keyboard hid_device\n", stderr);
-		return 4;
-	default:
-		return -1; // Unknown return value.
-	}
-}
-
-/* Executes the requested operation on the given keyboard.
- * Returns 0 if successful and 1 in case of failure.
- */
-int ite_829x(hid_device *keyboard, const char **arguments, FILE *input)
-{
-	struct ite_829x ite_829x = { keyboard, 0, 0 };
-	struct commands ite_829x_commands = {
-		&ite_829x,
-		(struct command[]) {
-			{ "brightness+speed", set_brightness_and_speed },
-			{ "brightness",       set_brightness,          },
-			{ "speed",            set_speed,               },
-			{ "effects",          set_effects,             },
-			{ "reset",            reset,                   },
-			{ "led",              set_led_color,           },
-			{ 0 }
-		}
-	};
-
-	int result = process_command_vector(&ite_829x_commands, arguments);
-	int code = to_exit_code(result, keyboard);
-	if (code != 0)
-		return code;
-
-	result = process_command_file(&ite_829x_commands, input);
-	return to_exit_code(result, keyboard);
-}
-
-int main(int count, const char **arguments)
-{
-	if (hid_init() == -1) {
-		fputs("Error during hidapi-libusb initialization\n", stderr);
-		return 4;
-	}
-
 	hid_device *keyboard = hid_open(VID, PID, NULL);
 	if (keyboard == NULL) {
 		fprintf(stderr, "Could not open keyboard [%04x:%04x]\n", VID, PID);
 		return 2;
 	}
 
-	int code = ite_829x(keyboard, arguments + 1, stdin);
+	static struct ite_829x ite_829x = { 0, 0, 0 };
+	static struct whisperer_command list[] = {
+		{ "brightness+speed", set_brightness_and_speed },
+		{ "brightness",       set_brightness,          },
+		{ "speed",            set_speed,               },
+		{ "effects",          set_effects,             },
+		{ "reset",            reset,                   },
+		{ "led",              set_led_color,           },
+		{ 0 }
+	};
 
-	hid_close(keyboard);
+	ite_829x.keyboard = keyboard;
+	commands->context = &ite_829x;
+	commands->list = list;
 
-	if (hid_exit() == -1) {
-		fputs("Error during hidapi-libusb finalization\n", stderr);
-		if (code == 0)
-			return 4;
-	}
+	return 0;
+}
 
-	return code;
+int
+whisperer_devices_ite_829x_close(void *context)
+{
+	struct ite_829x *ite_829x = context;
+	hid_close(ite_829x->keyboard);
+	return 0;
 }
