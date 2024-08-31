@@ -1,5 +1,5 @@
-#ifndef WHISPERER_DEVICES_ITE_829X
-#define WHISPERER_DEVICES_ITE_829X
+#ifndef WHISPERER_DEVICES_ITE_829X_HEADER
+#define WHISPERER_DEVICES_ITE_829X_HEADER
 
 #include <whisperer/cmd.h>
 #include <whisperer/devices/ite.h>
@@ -10,4 +10,4 @@
 int whisperer_devices_ite_829x_probe(struct whisperer_commands *commands);
 int whisperer_devices_ite_829x_close(void *context);
 
-#endif /* WHISPERER_DEVICES_ITE_829X */
+#endif /* WHISPERER_DEVICES_ITE_829X_HEADER */
