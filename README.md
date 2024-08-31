@@ -1,4 +1,4 @@
-# ite-829x
+# whisperer
 
 This program controls the LEDs present on the ITE Device(829x) keyboard
 fabricated by Integrated Technology Express, Inc.
@@ -20,11 +20,11 @@ USB data:
 
 The `hidapi-libusb` library is required by the program.
 
-    make    # creates the ite-829x executable
+    make    # creates the whisperer executable
 
 # Using
 
-    sudo ./ite-829x << LEDs
+    sudo ./whisperer << LEDs
         reset
         brightness+speed 4 0
         effects 4
