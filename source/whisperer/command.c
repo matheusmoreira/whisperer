@@ -25,7 +25,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <whisperer/cmd.h>
+#include <whisperer/command.h>
 
 #define DIV_CEIL(x, y) ((((x) - 1) / (y)) + 1)
 

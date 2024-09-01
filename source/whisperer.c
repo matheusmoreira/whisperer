@@ -26,8 +26,7 @@
 
 #include <hidapi/hidapi.h>
 
-#include <whisperer/cmd.h>
-#include <whisperer/device.h>
+#include <whisperer/command.h>
 #include <whisperer/devices/ite/829x.h>
 
 int whisperer_probe(struct whisperer_commands *commands)

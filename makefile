@@ -27,7 +27,7 @@ directories.build.all := $(directories.build)/
 
 objects.all :=
 
-objects.all += whisperer.o whisperer/cmd.o whisperer/devices/ite/829x.o
+objects.all += whisperer.o whisperer/command.o whisperer/devices/ite/829x.o
 objects.all := $(addprefix $(directories.build.objects)/, $(objects.all))
 directories.build.all += $(dir $(objects.all))
 

@@ -1,7 +1,7 @@
 #ifndef WHISPERER_DEVICES_ITE_829X_HEADER
 #define WHISPERER_DEVICES_ITE_829X_HEADER
 
-#include <whisperer/cmd.h>
+#include <whisperer/command.h>
 #include <whisperer/devices/ite.h>
 
 /* ITE Device(829x) */
